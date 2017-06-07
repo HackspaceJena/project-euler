@@ -2,13 +2,9 @@
 
 (require math/number-theory)
 
-(define (primes x) (filter prime? (range 2 (sqrt x))))
+(define (max-prime-factor x)
+  (if (prime? x) x
+      (for/or ((i (filter prime? (range 2 (sqrt x)))))
+        (if (zero? (remainder x i)) (max-prime-factor (quotient x i)) #f))))
 
-(define (primefactors x primes)
-  (if (prime? x)
-      (list x)
-      (if (zero? (remainder x (car primes)))
-          (cons (car primes) (primefactors (quotient x (car primes)) primes))
-          (primefactors x (cdr primes)))))
-
-(apply max (primefactors 600851475143 (primes 600851475143)))
+(max-prime-factor 600851475143)
