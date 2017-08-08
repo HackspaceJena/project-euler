@@ -1,0 +1,97 @@
+---
+title: "Coverage"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(printr)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r init}
+coverage <- function() {
+    fileNames <- list.files(pattern="euler[0-9]{4}[.][a-zA-Z]+",recursive=T)
+    truncatedNames <- gsub("/euler[0-9]{4}", "", fileNames)
+    rawSolvedProblems <- unlist(strsplit(truncatedNames, split="[.]"))
+
+    solvedProblems <- matrix(FALSE, nrow=length(rawSolvedProblems)/2, ncol=2)
+    solvedProblems[,1] <- rawSolvedProblems[seq(2,length(rawSolvedProblems),by=2)]
+    solvedProblems[,2] <- rawSolvedProblems[seq(1,length(rawSolvedProblems),by=2)]
+
+    usedLanguages <- sort(unique(solvedProblems[,1]))
+    problemNrs <- unique(solvedProblems[,2])
+    solvedStateMatrix <- matrix(data=FALSE,nrow=length(usedLanguages),ncol=length(problemNrs))
+    rownames(solvedStateMatrix) <- usedLanguages
+    colnames(solvedStateMatrix) <- problemNrs
+
+    solvedStateMatrix[solvedProblems] <- TRUE
+    solvedStateMatrix
+}
+
+summary.coverage <- function(x) {
+    mostFrequent <- max(x)
+    mostFrequentName <- names(which(x == mostFrequent, x))
+    result <- structure(
+        .Data=list(
+            rawData=x,
+            data=data.frame(factor(names(x)), x),
+            max=mostFrequent, 
+            maxName=mostFrequentName
+        )
+    )
+    result
+}
+
+coverageMat <- coverage()
+langStats <- summary.coverage(rowSums(coverageMat))
+problemStats <- summary.coverage(colSums(coverageMat))
+
+w <- writeLines
+```
+
+## General
+
+```{r general1}
+foo <- coverageMat
+foo[foo==T] <- "✔"
+foo[foo==F] <- "✘"
+t(foo)
+```
+
+```{r general2}
+texts <- c("Total languages used:", "Total problems solved:")
+values <- c(nrow(coverageMat), ncol(coverageMat))
+as.matrix(paste(texts, values))
+```
+
+## Language Statistics
+
+### Data:
+```{r languages1}
+as.matrix(t(langStats$rawData))
+```
+
+```{r languages2}
+plot(langStats$data)
+```
+
+### Most used language(s):
+```{r languages3}
+as.matrix(paste(langStats$maxName, "with", langStats$max, "solved problems"))
+```
+
+## Problems Statistics
+
+### Data:
+```{r problems1}
+problemStats$rawData
+```
+
+```{r problems2}
+plot(problemStats$data)
+```
+
+### Most solved problem(s):
+```{r problems3}
+as.matrix(paste(problemStats$maxName, "with", problemStats$max, "solutions"))
+```
